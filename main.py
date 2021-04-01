@@ -44,13 +44,14 @@ def update_light(light, bid_price, open_price):
         light.alert = 'select'
 
 def execute():
-    try:
-        a = ally.Ally('./params.json')
-        b = Bridge(os.getenv('BRIDGE_IP'))
-        b.connect()
+    a = ally.Ally()
+    b = Bridge(os.getenv('BRIDGE_IP'))
+    b.connect()
 
-        light_names = b.get_light_objects('name')
-        light = light_names[LIGHT_NAME]
+    light_names = b.get_light_objects('name')
+    light = light_names[LIGHT_NAME]
+
+    try:
         light.on = True
         light.brightness = BRIGHTNESS
         light.hue = BLUE
