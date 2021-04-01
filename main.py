@@ -1,9 +1,15 @@
+import os
+from time import sleep
 import ally
 from phue import Bridge
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 SYMBOL = 'ge'
 LIGHT_NAME = 'Unfinished room light'
+
 RED = 0
 GREEN = 25500
 BLUE = 46920
@@ -27,13 +33,20 @@ def saturation(bid_price, open_price):
     return new_sat if new_sat < MAX_SAT else MAX_SAT
 
 def update_light(light, bid_price, open_price):
-    light.hue = hue(bid_price, open_price)
+    old_hue = light.hue
+    new_hue = hue(bid_price, open_price)
+
+    light.hue = new_hue
     light.saturation = saturation(bid_price, open_price)
+
+    if old_hue != new_hue:
+        sleep(0.5)  # allow the light to change color before flashing
+        light.alert = 'select'
 
 def execute():
     try:
         a = ally.Ally('./params.json')
-        b = Bridge('10.0.0.113')
+        b = Bridge(os.getenv('BRIDGE_IP'))
         b.connect()
 
         light_names = b.get_light_objects('name')
@@ -54,6 +67,8 @@ def execute():
         update_light(light, bid_price, open_price)
 
         for quote in a.stream(SYMBOL):
+            print(open_price)
+            print(quote)
             bid_price = float(quote['bid'])
             update_light(light, bid_price, open_price)
     finally:
